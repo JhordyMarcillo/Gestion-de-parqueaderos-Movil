@@ -84,14 +84,14 @@ public class EspacioService {
         return espacioRepository.findByParqueaderoIdAndEstado(parqueaderosId, "LIBRE");
     }
 
-    public Espacio actualizarEstadoEspacio(Long espacioId, String nuevoEstado) {
+    public Espacio cambiarEstado(Long espacioId, String nuevoEstado) {
         Espacio espacio = espacioRepository.findById(espacioId)
                 .orElseThrow(() -> new RuntimeException("Espacio no encontrado"));
 
         espacio.setEstado(nuevoEstado);
         Espacio espacioGuardado = espacioRepository.save(espacio);
 
-        messagingTemplate.convertAndSend("/topic/espacios", espacioGuardado);
+        messagingTemplate.convertAndSend("/topic/", espacioGuardado);
         return espacioGuardado;
     }
 }

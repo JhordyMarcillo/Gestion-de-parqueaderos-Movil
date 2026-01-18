@@ -17,19 +17,15 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  // --- MÉTODO PARA NAVEGAR SEGÚN ROL ---
   void _navegar(String rol) {
-    print("🚀 INTENTANDO NAVEGACIÓN HACIA: $rol");
 
     if (rol == 'ADMIN' || rol == 'ROLE_ADMIN') {
-      // Navegación forzada a Admin
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const AdminScreen()),
-            (route) => false, // Borra el historial para que no pueda volver atrás
+            (route) => false,
       );
     } else {
-      // Navegación forzada a Cliente
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const HomeScreen()),
@@ -53,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 const Icon(Icons.local_parking_rounded, size: 80, color: Colors.blueAccent),
                 const SizedBox(height: 10),
-                const Text("Prueba Parking", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                const Text("hola Parking", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 40),
 
                 // Email
@@ -108,13 +104,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           // Mensaje visual rápido
                           ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text("✅ Login correcto. Rol: $role"),
+                                content: Text("Login correcto. Rol: $role"),
                                 backgroundColor: Colors.green,
                                 duration: const Duration(seconds: 1),
                               )
                           );
 
-                          // Esperamos un milisegundo para asegurar que el UI renderice el snackbar
                           await Future.delayed(const Duration(milliseconds: 500));
 
                           // 3. Navegar
@@ -123,7 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text("❌ Error de credenciales o conexión"),
+                                content: Text("Error de credenciales o conexión"),
                                 backgroundColor: Colors.red,
                               )
                           );
@@ -134,15 +129,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
-                // --- BOTÓN DE EMERGENCIA (SOLO PARA PRUEBAS) ---
-                const SizedBox(height: 30),
-                TextButton(
-                  onPressed: () {
-                    // Esto simula que eres admin sin loguearte, para probar si la pantalla abre
-                    _navegar("ADMIN");
-                  },
-                  child: const Text("🛠️ TEST: Forzar entrada como Admin"),
-                )
               ],
             ),
           ),

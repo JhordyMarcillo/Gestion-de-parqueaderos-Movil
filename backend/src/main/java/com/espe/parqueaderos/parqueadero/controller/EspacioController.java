@@ -6,7 +6,8 @@ import com.espe.parqueaderos.parqueadero.service.impl.EspacioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,5 +51,16 @@ public class EspacioController {
     ) {
         Espacio actualizado = espacioService.actualizarEstadoDesdeCamara(identificador, parqueaderoId, estado, confianza);
         return ResponseEntity.ok(actualizado);
+    }
+
+    @PutMapping("/{id}/estado")
+    @Operation(summary = "Cambiar estado manual", description = "Permite al Admin forzar el estado de un espacio")
+    public ResponseEntity<?> actualizarEstado(
+            @PathVariable Long id,
+            @RequestParam String estado) { // Recibimos: LIBRE, OCUPADO, MANTENIMIENTO
+
+        Espacio espacioActualizado = espacioService.cambiarEstado(id, estado.toUpperCase());
+
+        return ResponseEntity.ok(espacioActualizado);
     }
 }

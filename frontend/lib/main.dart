@@ -25,8 +25,7 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.blue,
           useMaterial3: true,
         ),
-        // AQUÍ ESTÁ LA CLAVE:
-        // Debe decir LoginScreen(), no HomeScreen() ni otra cosa.
+
         home: const LoginScreen(),
       ),
     );

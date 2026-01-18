@@ -15,44 +15,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Timer? _timer;
 
-  void _mostrarDialogoReserva(BuildContext context, dynamic espacio) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Reservar ${espacio.identificador}"),
-        content: const Text("¿Deseas reservar este espacio por 1 hora?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context), // Cerrar
-            child: const Text("Cancelar"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // AQUÍ LLAMAREMOS AL BACKEND LUEGO
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Funcionalidad de Reserva: ¡Próximamente!"))
-              );
-            },
-            child: const Text("Reservar"),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   void initState() {
     super.initState();
 
-    // 1. Carga inicial (con spinner)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final parkingProvider = Provider.of<ParkingProvider>(context, listen: false);
       parkingProvider.cargarEspacios(checkBackground: false);
 
-      // 2. Iniciar el ciclo automático (cada 3 segundos)
       _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
-        // Llamamos en modo "background" para que no salga el spinner
         parkingProvider.cargarEspacios(checkBackground: true);
       });
     });
@@ -60,8 +31,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    // 3. ¡MUY IMPORTANTE! Matar el timer cuando salimos de la pantalla
-    // Si no haces esto, la app seguirá pidiendo datos aunque la cierres.
     _timer?.cancel();
     super.dispose();
   }
@@ -69,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final parkingProvider = Provider.of<ParkingProvider>(context);
-    final size = MediaQuery.of(context).size; // Para cálculos de pantalla
+    final size = MediaQuery.of(context).size;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     return Scaffold(
@@ -87,9 +56,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: SingleChildScrollView(
         child: Container(
-          height: size.height, // Aseguramos que ocupe la pantalla
+          height: size.height,
           padding: const EdgeInsets.all(16.0),
-          child: Column( // <--- Este es el Column que te daba error
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
@@ -98,7 +67,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 10),
 
-              // Leyenda de colores
               Row(
                 children: [
                   _buildLeyenda(Colors.green, "Libre"),
@@ -108,8 +76,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 20),
 
-              // GRILLA DE ESPACIOS
-              // Usamos Expanded para que ocupe el resto de la pantalla
               Expanded(
                 child: parkingProvider.isLoading
                     ? const Center(child: CircularProgressIndicator())
@@ -124,13 +90,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   itemBuilder: (context, index) {
                     final espacio = parkingProvider.espacios[index];
                     return Card(
-                      // ... tu código de la tarjeta ...
                         color: espacio.estado == 'OCUPADO' ? Colors.red.shade100 : Colors.green.shade100,
                         child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(espacio.identificador),
-                              // ...
                             ]
                         )
                     );
@@ -148,7 +112,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Widget auxiliar para la leyenda
   Widget _buildLeyenda(Color color, String texto) {
     return Row(
       children: [

@@ -21,12 +21,10 @@ class AuthService {
       if (response.statusCode == 200) {
         return authResponseFromJson(response.body);
       } else {
-        // Manejar errores como 401 (Unauthorized) o 400
         final errorJson = jsonDecode(response.body);
         throw Exception(errorJson['message'] ?? 'Credenciales incorrectas');
       }
     } catch (e) {
-      // Error de conexión (servidor apagado, IP incorrecta)
       throw Exception('Error de conexión: $e');
     }
   }

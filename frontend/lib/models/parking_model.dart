@@ -4,8 +4,8 @@ List<Espacio> espacioListFromJson(String str) => List<Espacio>.from(json.decode(
 
 class Espacio {
   int id;
-  String identificador; // "A1"
-  String estado;        // "LIBRE", "OCUPADO"
+  String identificador;
+  String estado;
   bool esPreferencial;
 
   Espacio({
