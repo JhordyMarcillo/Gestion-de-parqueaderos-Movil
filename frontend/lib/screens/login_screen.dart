@@ -49,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 const Icon(Icons.local_parking_rounded, size: 80, color: Colors.blueAccent),
                 const SizedBox(height: 10),
-                const Text("hola Parking", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                const Text("hola1 Parking", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 40),
 
                 // Email

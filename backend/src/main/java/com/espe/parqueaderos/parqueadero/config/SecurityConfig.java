@@ -37,12 +37,11 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 1. RUTAS PÚBLICAS (Solo texto, sin clases extrañas)
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/ws-parking/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
-                        // 2. RUTAS PRIVADAS (Todo lo demás)
+
                         .anyRequest().authenticated()
                 );
 

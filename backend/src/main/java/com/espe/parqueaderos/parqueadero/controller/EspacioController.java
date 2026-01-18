@@ -25,7 +25,6 @@ public class EspacioController {
     @Autowired
     private EspacioService espacioService;
 
-    // --- ENDPOINTS PARA LA APP MÓVIL ---
 
     @GetMapping("/libres/{parqueaderoId}")
     @Operation(summary = "Listar espacios libres", description = "Usado por la App para mostrar dónde parquear")
@@ -39,7 +38,6 @@ public class EspacioController {
         return ResponseEntity.ok(espacioService.obtenerTodos(parqueaderoId));
     }
 
-    // --- ENDPOINTS PARA EL SENSOR / CÁMARA (IoT) ---
 
     @PostMapping("/detectar")
     @Operation(summary = "Simulación Cámara", description = "Actualiza el estado de un espacio basado en detección visual")
@@ -57,7 +55,7 @@ public class EspacioController {
     @Operation(summary = "Cambiar estado manual", description = "Permite al Admin forzar el estado de un espacio")
     public ResponseEntity<?> actualizarEstado(
             @PathVariable Long id,
-            @RequestParam String estado) { // Recibimos: LIBRE, OCUPADO, MANTENIMIENTO
+            @RequestParam String estado) { // LIBRE, OCUPADO, MANTENIMIENTO
 
         Espacio espacioActualizado = espacioService.cambiarEstado(id, estado.toUpperCase());
 

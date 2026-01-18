@@ -16,7 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/reservas")
 @Tag(name = "Gestión de Reservas", description = "Creación y consulta de reservas")
-@SecurityRequirement(name = "Bearer Authentication") // Indica en Swagger que requiere candadito
+@SecurityRequirement(name = "Bearer Authentication")
 public class ReservaController {
 
     @Autowired
@@ -25,7 +25,6 @@ public class ReservaController {
     @PostMapping
     @Operation(summary = "Crear nueva reserva", description = "Valida conflictos de horario y genera reserva")
     public ResponseEntity<?> crearReserva(@RequestBody CrearReservaRequest request, Authentication authentication) {
-        // Extraemos el email del token JWT automáticamente
         String emailUsuario = authentication.getName();
 
         try {

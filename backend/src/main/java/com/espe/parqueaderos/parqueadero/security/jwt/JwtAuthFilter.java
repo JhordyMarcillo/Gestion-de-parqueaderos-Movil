@@ -36,10 +36,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         //final String jwt;
         final String userEmail;
 
-        // 2. SI NO HAY TOKEN, DEJAR PASAR (IMPORTANTE PARA EL LOGIN)
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response); // <--- DEJA PASAR LA PETICIÓN
-            return; // <--- Y TERMINA AQUÍ LA EJECUCIÓN DEL FILTRO
+            filterChain.doFilter(request, response);
+            return;
         }
 
         try {
