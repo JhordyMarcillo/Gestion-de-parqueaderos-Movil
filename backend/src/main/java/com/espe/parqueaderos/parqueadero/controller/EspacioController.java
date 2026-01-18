@@ -17,7 +17,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/espacios")
+@RequestMapping("/api/parqueaderos")
 @Tag(name = "Espacios y Sensores", description = "Gestión de sensores IoT y consulta de espacios")
 public class EspacioController {
 
