@@ -21,6 +21,8 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     @Query("SELECT COUNT(r) > 0 FROM Reserva r WHERE r.usuario.email = :email AND r.estado IN ('PENDIENTE', 'EN_CURSO')")
     boolean existeReservaActiva(@Param("email") String email);
 
+    List<Reserva> findByUsuarioEmailAndEstadoIn(String email, List<String> estados);
+
     List<Reserva> findByEspacioId(Long espacioId);
     @Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END " +
             "FROM Reserva r " +

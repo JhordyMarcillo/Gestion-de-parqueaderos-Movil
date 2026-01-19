@@ -33,14 +33,12 @@ dependencies:
   http: ^1.2.0           # Para peticiones REST (GET, POST)
   web_socket_channel: ^3.0.0 # Para recibir alertas en tiempo real
 
-    # --- Mapas y Geolocalización ---
   google_maps_flutter: ^2.5.0
-  geolocator: ^10.1.0    # Para saber dónde está el usuario
+  geolocator: ^10.1.0
 
-    # --- Utilidades ---
-  shared_preferences: ^2.2.2  # Para guardar el Token JWT en el celular
-  jwt_decoder: ^2.0.1         # Para leer el token y saber si expiró
-  provider: ^6.1.1            # Gestión de estado (simple y potente)
+  shared_preferences: ^2.2.2
+  jwt_decoder: ^2.0.1
+  provider: ^6.1.1
   qr_flutter: ^4.1.0
 
   # The following adds the Cupertino Icons font to your application.

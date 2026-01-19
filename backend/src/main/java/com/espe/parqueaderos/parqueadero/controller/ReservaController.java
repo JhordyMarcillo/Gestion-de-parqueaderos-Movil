@@ -19,7 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/reservas")
@@ -42,6 +42,7 @@ public class ReservaController {
     @PostMapping("/crear")
     public ResponseEntity<?> crearReserva(@RequestBody ReservaRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String qrCodeString = UUID.randomUUID().toString();
         String email = auth.getName();
 
         if (reservaRepository.existeReservaActiva(email)) {
@@ -63,12 +64,18 @@ public class ReservaController {
         reserva.setFechaInicio(LocalDateTime.now());
         reserva.setFechaFin(LocalDateTime.now().plusHours(request.getHoras()));
         reserva.setEstado("PENDIENTE");
+        reserva.setCodigoQr(qrCodeString);
         reservaRepository.save(reserva);
 
         espacio.setEstado("RESERVADO");
         espacioRepository.save(espacio);
 
-        return ResponseEntity.ok("Reserva creada con éxito. ID: " + reserva.getId());
+        Map<String, Object> response = new HashMap<>();
+        response.put("mensaje", "Reserva creada con éxito");
+        response.put("id", reserva.getId());
+        response.put("qr", qrCodeString);
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/mis-reservas")
@@ -76,5 +83,22 @@ public class ReservaController {
     public ResponseEntity<List<Reserva>> misReservas(Authentication authentication) {
         String emailUsuario = authentication.getName();
         return ResponseEntity.ok(reservaService.listarMisReservas(emailUsuario));
+    }
+
+    @PutMapping("/cancelar/{id}")
+    public ResponseEntity<?> cancelarReserva(@PathVariable Long id) {
+        Reserva reserva = reservaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        reserva.setEstado("CANCELADA");
+        reservaRepository.save(reserva);
+
+        Espacio espacio = reserva.getEspacio();
+        espacio.setEstado("LIBRE");
+        espacioRepository.save(espacio);
+
+        return ResponseEntity.ok("Reserva cancelada");
     }
 }

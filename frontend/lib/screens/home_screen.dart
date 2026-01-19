@@ -4,6 +4,7 @@ import '../providers/parking_provider.dart';
 import '../providers/auth_provider.dart';
 import './SectionDetailScreen.dart';
 import 'dart:async';
+import './reservations_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -50,11 +51,21 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Distribución Parqueadero"),
+        title: const Text("Parqueadero"),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.time_to_leave_sharp, color: Colors.black87),
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MyReservationsScreen())
+              );
+            },
+          ),
+
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.red),
             onPressed: () {
@@ -75,7 +86,6 @@ class _HomeScreenState extends State<HomeScreen> {
               child: _buildZonaCard(context, "A", Colors.green, espacios),
             ),
 
-            // Texto ENTRADA (Izquierda)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 5),
               child: Text("ENTRADA", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, letterSpacing: 1.2)),

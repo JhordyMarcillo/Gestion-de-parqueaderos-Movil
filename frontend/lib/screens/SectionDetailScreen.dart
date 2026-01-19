@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/parking_provider.dart';
 import '../widgets/MapaNavegacion.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class SectionDetailScreen extends StatelessWidget {
   final String sectionId;
@@ -104,7 +105,6 @@ class SectionDetailScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text("Ingresa duración:"),
-            const SizedBox(height: 10),
             TextField(controller: horasController, keyboardType: TextInputType.number),
           ],
         ),
@@ -115,15 +115,15 @@ class SectionDetailScreen extends StatelessWidget {
                 int horas = int.tryParse(horasController.text) ?? 1;
                 Navigator.pop(ctx);
 
-
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Procesando...")));
-                bool exito = await provider.reservarEspacio(espacio.id, horas);
+
+                Map<String, dynamic> resultado = await provider.reservarEspacio(espacio.id, horas);
 
                 if (context.mounted) {
-                  if (exito) {
-                    _mostrarMapaExito(context, espacio.identificador);
+                  if (resultado['success'] == true) {
+                    _mostrarMapaExito(context, espacio.identificador, resultado['qr']);
                   } else {
-                    _mostrarError(context, "No se pudo reservar. Posiblemente ya tienes una reserva activa.");
+                    _mostrarError(context, resultado['message']);
                   }
                 }
               },
@@ -134,38 +134,57 @@ class SectionDetailScreen extends StatelessWidget {
     );
   }
 
-  void _mostrarMapaExito(BuildContext context, String identificadorEspacio) {
+  void _mostrarMapaExito(BuildContext context, String identificadorEspacio, String qrDataString) {
     String letraZona = identificadorEspacio[0].toUpperCase();
 
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.green),
-            SizedBox(width: 10),
-            Text("Reserva Exitosa"),
-          ],
-        ),
+        contentPadding: const EdgeInsets.all(20),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text("Tu espacio es el $identificadorEspacio.", style: const TextStyle(fontSize: 18)),
-            const SizedBox(height: 10),
-            const Text("Sigue la ruta:", style: TextStyle(color: Colors.grey)),
+            const Text("¡Reserva Exitosa!", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.green)),
+            const Divider(),
+            const Text("Escanea este código en la entrada:", style: TextStyle(color: Colors.grey)),
             const SizedBox(height: 15),
 
-            MapaNavegacion(zonaDestino: letraZona),
+            //QR
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black12),
+                  borderRadius: BorderRadius.circular(10)
+              ),
+              child: QrImageView(
+                data: qrDataString,
+                version: QrVersions.auto,
+                size: 180.0,
+                backgroundColor: Colors.white,
+              ),
+            ),
 
+            const SizedBox(height: 20),
+            Text("Espacio asignado: $identificadorEspacio", style: const TextStyle(fontSize: 18)),
             const SizedBox(height: 10),
+
+            SizedBox(
+                height: 150,
+                child: MapaNavegacion(zonaDestino: letraZona)
+            ),
+
           ],
         ),
         actions: [
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, foregroundColor: Colors.white),
-            child: const Text("Voy en camino"),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => Navigator.pop(ctx),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, foregroundColor: Colors.white),
+              label: const Text("Voy en camino"),
+            ),
           )
         ],
       ),
@@ -177,7 +196,7 @@ class SectionDetailScreen extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text("Atención"),
-        content: Text(mensaje),
+        content: Text("Ya tienes una reserva activa."),
         actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("OK"))],
       ),
     );

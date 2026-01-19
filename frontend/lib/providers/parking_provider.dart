@@ -8,6 +8,8 @@ import '../models/parking_model.dart';
 class ParkingProvider extends ChangeNotifier {
   List<Espacio> _espacios = [];
   List<Espacio> get espacios => _espacios;
+  List<dynamic> _misReservas = [];
+  List<dynamic> get misReservas => _misReservas;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -80,9 +82,8 @@ class ParkingProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> reservarEspacio(int espacioId, int horas) async {
+  Future<Map<String, dynamic>> reservarEspacio(int espacioId, int horas) async {
     final url = Uri.parse('${ApiConstants.baseUrl}api/reservas/crear');
-
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwt_token');
 
@@ -99,12 +100,62 @@ class ParkingProvider extends ChangeNotifier {
         }),
       );
 
+      final responseData = json.decode(response.body);
+
       if (response.statusCode == 200) {
         await cargarEspacios();
-        return true;
+        return {'success': true, 'qr': responseData['qr']};
       } else {
-        return false;
+        return {'success': false, 'message': responseData['error'] ?? 'Error desconocido'};
       }
+
+    } catch (e) {
+      return {'success': false, 'message': 'Error de conexión'};
+    }
+  }
+
+  Future<void> cargarMisReservas() async {
+    final url = Uri.parse('${ApiConstants.baseUrl}api/reservas/mis-reservas');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        _misReservas = json.decode(response.body);
+        notifyListeners();
+      }
+    } catch (e) {
+      print("Error cargando reservas: $e");
+    }
+  }
+
+  Future<bool> cancelarReserva(int idReserva) async {
+    final url = Uri.parse('${ApiConstants.baseUrl}api/reservas/cancelar/$idReserva');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    try {
+      final response = await http.put(
+        url,
+        headers: {
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        await cargarMisReservas();
+        await cargarEspacios();
+        return true;
+      }
+      return false;
     } catch (e) {
       return false;
     }
