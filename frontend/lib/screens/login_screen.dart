@@ -49,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 const Icon(Icons.local_parking_rounded, size: 80, color: Colors.blueAccent),
                 const SizedBox(height: 10),
-                const Text("hola1 Parking", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                const Text("hola 1Parking", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 40),
 
                 // Email
@@ -90,18 +90,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     onPressed: () async {
                       if (_formKey.currentState!.validate()) {
-                        // 1. Llamada al Login
                         final success = await authProvider.login(
                           _emailController.text.trim(),
                           _passController.text.trim(),
                         );
 
-                        // 2. Verificación
                         if (success && context.mounted) {
                           final prefs = await SharedPreferences.getInstance();
                           final role = prefs.getString('user_role')?.trim().toUpperCase() ?? "USER";
 
-                          // Mensaje visual rápido
                           ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text("Login correcto. Rol: $role"),
@@ -112,7 +109,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                           await Future.delayed(const Duration(milliseconds: 500));
 
-                          // 3. Navegar
                           _navegar(role);
 
                         } else {

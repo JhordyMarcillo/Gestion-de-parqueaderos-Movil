@@ -79,4 +79,34 @@ class ParkingProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<bool> reservarEspacio(int espacioId, int horas) async {
+    final url = Uri.parse('${ApiConstants.baseUrl}api/reservas/crear');
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({
+          "espacioId": espacioId,
+          "horas": horas
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        await cargarEspacios();
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
 }

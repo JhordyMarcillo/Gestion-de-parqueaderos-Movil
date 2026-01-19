@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ReservaService {
@@ -72,5 +73,37 @@ public class ReservaService {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         return reservaRepository.findByUsuarioId(usuario.getId());
+    }
+
+    public Espacio cambiarEstado(Long idEspacio, String nuevoEstado) {
+        Optional<Espacio> espacioOpt = espacioRepository.findById(idEspacio);
+
+        if (espacioOpt.isPresent()) {
+            Espacio espacio = espacioOpt.get();
+            String estadoAnterior = espacio.getEstado();
+
+            if ("OCUPADO".equalsIgnoreCase(nuevoEstado)) {
+
+                if ("RESERVADO".equalsIgnoreCase(estadoAnterior)) {
+                    System.out.println("Auto detectado en espacio RESERVADO.");
+
+                    Optional<Reserva> reservaOpt = reservaRepository.findReservaPendienteByEspacio(idEspacio);
+
+                    if (reservaOpt.isPresent()) {
+                        Reserva reserva = reservaOpt.get();
+                        reserva.setEstado("EN_CURSO");
+                        reservaRepository.save(reserva);
+                        System.out.println("Reserva #" + reserva.getId() + " validada. Cliente correcto.");
+                    } else {
+                        System.out.println("⚠ALERTA: Auto en espacio reservado sin reserva activa en BD (¿Colado?).");
+                    }
+                }
+            }
+
+            espacio.setEstado(nuevoEstado);
+            return espacioRepository.save(espacio);
+        } else {
+            throw new RuntimeException("Espacio no encontrado");
+        }
     }
 }
