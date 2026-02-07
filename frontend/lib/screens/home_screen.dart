@@ -123,11 +123,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => parkingProvider.cargarEspacios(),
-        backgroundColor: Colors.black,
-        child: const Icon(Icons.refresh, color: Colors.white),
-      ),
     );
   }
 
@@ -136,6 +131,8 @@ class _HomeScreenState extends State<HomeScreen> {
     int libres = _contar(letra, "LIBRE", espacios);
     int ocupados = _contar(letra, "OCUPADO", espacios);
     int reservados = _contar(letra, "RESERVADO", espacios);
+    int mantenimiento = _contar(letra, "MANTENIMIENTO", espacios);
+
 
     return InkWell(
       onTap: () {
@@ -165,6 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildCounterVertical(Colors.green, libres, "Libres"),
             _buildCounterVertical(Colors.orange, reservados, "Reserv"),
             _buildCounterVertical(Colors.red, ocupados, "Ocup"),
+            _buildCounterVertical(Colors.grey, mantenimiento, "Mant"),
           ],
         )
             : Row(
@@ -194,6 +192,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 _buildCounterRow(Colors.orange, reservados, "Reserv"),
                 const SizedBox(height: 4),
                 _buildCounterRow(Colors.red, ocupados, "Ocup"),
+                const SizedBox(height: 4),
+                _buildCounterRow(Colors.grey, mantenimiento, "Mant"),
               ],
             )
           ],

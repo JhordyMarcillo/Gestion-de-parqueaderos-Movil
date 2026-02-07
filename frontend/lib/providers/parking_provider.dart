@@ -10,6 +10,12 @@ class ParkingProvider extends ChangeNotifier {
   List<Espacio> get espacios => _espacios;
   List<dynamic> _misReservas = [];
   List<dynamic> get misReservas => _misReservas;
+  Map<String, dynamic> _stats = {
+    "libres": 0,
+    "ocupados": 0,
+    "reservados": 0,
+  };
+  Map<String, dynamic> get stats => _stats;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -158,6 +164,26 @@ class ParkingProvider extends ChangeNotifier {
       return false;
     } catch (e) {
       return false;
+    }
+  }
+
+  Future<void> cargarEstadisticas() async {
+    final url = Uri.parse('${ApiConstants.baseUrl}api/admin/stats/dashboard');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {"Authorization": "Bearer $token"},
+      );
+
+      if (response.statusCode == 200) {
+        _stats = json.decode(response.body);
+        notifyListeners();
+      }
+    } catch (e) {
+      print("Error cargando stats: $e");
     }
   }
 }

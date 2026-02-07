@@ -13,4 +13,5 @@ public interface EspacioRepository extends JpaRepository<Espacio, Long> {
     long countByParqueaderoIdAndEstado(Long parqueaderoId, String estado);
     Optional<Espacio> findByIdentificadorAndParqueaderoId(String identificador, Long parqueaderoId);
     Optional<Espacio> findById(Long parqueaderoId);
+    long countByEstado(String estado);
 }

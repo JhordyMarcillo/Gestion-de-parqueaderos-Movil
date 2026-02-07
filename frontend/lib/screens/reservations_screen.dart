@@ -87,6 +87,7 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
                     ],
                   ),
                   const SizedBox(height: 20),
+                  if (reserva['estado'] != 'CANCELADA')
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/parking_provider.dart';
 import '../widgets/MapaNavegacion.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:flutter/services.dart';
 
 class SectionDetailScreen extends StatelessWidget {
   final String sectionId;
@@ -104,8 +105,29 @@ class SectionDetailScreen extends StatelessWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text("Ingresa duración:"),
-            TextField(controller: horasController, keyboardType: TextInputType.number),
+            const Text("Ingresa duración (1 - 24h):"),
+            const SizedBox(height: 10),
+            TextField(
+              controller: horasController,
+              keyboardType: TextInputType.number,
+              maxLength: 2,
+              decoration: const InputDecoration(
+                hintText: "Ej: 2",
+                counterText: "",
+                border: OutlineInputBorder(),
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                TextInputFormatter.withFunction((oldValue, newValue) {
+                  if (newValue.text.isEmpty) return newValue;
+                  final intValue = int.tryParse(newValue.text);
+                  if (intValue != null && intValue >= 1 && intValue <= 24) {
+                    return newValue; // Valor válido
+                  }
+                  return oldValue; // Rechazar valor fuera de rango
+                }),
+              ],
+            ),
           ],
         ),
         actions: [

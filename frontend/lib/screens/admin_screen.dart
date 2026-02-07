@@ -4,6 +4,7 @@ import '../providers/auth_provider.dart';
 import '../providers/parking_provider.dart';
 import 'login_screen.dart';
 import './AdminSectionDetailScreen.dart';
+import './AdminDashboardScreen.dart';
 
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
@@ -40,6 +41,16 @@ class _AdminScreenState extends State<AdminScreen> {
         backgroundColor: Colors.orange,
         foregroundColor: Colors.white,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.bar_chart_rounded, size: 30),
+            tooltip: "Ver Estadísticas",
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
@@ -103,11 +114,6 @@ class _AdminScreenState extends State<AdminScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.orange,
-        onPressed: () => parkingProvider.cargarEspacios(),
-        child: const Icon(Icons.refresh, color: Colors.white),
-      ),
     );
   }
 
@@ -144,6 +150,7 @@ class _AdminScreenState extends State<AdminScreen> {
             const Divider(),
             _buildCounterVertical(Colors.green, libres, "Lib"),
             _buildCounterVertical(Colors.red, ocupados, "Ocp"),
+            _buildCounterVertical(Colors.orange, reservados, "Reserv"),
             _buildCounterVertical(Colors.grey, mant, "Mnt"),
           ],
         )
@@ -173,6 +180,8 @@ class _AdminScreenState extends State<AdminScreen> {
                 _buildCounterRow(Colors.red, ocupados, "Ocupados"),
                 const SizedBox(height: 4),
                 _buildCounterRow(Colors.orange, reservados, "Reserv"),
+                const SizedBox(height: 4),
+                _buildCounterRow(Colors.grey, mant, "Mantenimiento"),
               ],
             )
           ],

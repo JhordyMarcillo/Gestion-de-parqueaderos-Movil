@@ -118,30 +118,36 @@ class AdminSectionDetailScreen extends StatelessWidget {
               children: [
                 Text("Editar ${espacio.identificador}", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                 const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.check_circle, color: Colors.green),
-                  title: const Text("Liberar Espacio"),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    provider.cambiarEstadoEspacio(espacio.id, "LIBRE");
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.car_rental, color: Colors.red),
-                  title: const Text("Marcar OCUPADO"),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    provider.cambiarEstadoEspacio(espacio.id, "OCUPADO");
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.build, color: Colors.grey),
-                  title: const Text("Poner en MANTENIMIENTO"),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    provider.cambiarEstadoEspacio(espacio.id, "MANTENIMIENTO");
-                  },
-                ),
+
+                if (espacio.estado != "LIBRE")
+                  ListTile(
+                    leading: const Icon(Icons.check_circle, color: Colors.green),
+                    title: const Text("Liberar Espacio"),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      provider.cambiarEstadoEspacio(espacio.id, "LIBRE");
+                    },
+                  ),
+
+                if (espacio.estado != "OCUPADO")
+                  ListTile(
+                    leading: const Icon(Icons.car_rental, color: Colors.red),
+                    title: const Text("Marcar OCUPADO"),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      provider.cambiarEstadoEspacio(espacio.id, "OCUPADO");
+                    },
+                  ),
+
+                if (espacio.estado != "MANTENIMIENTO")
+                  ListTile(
+                    leading: const Icon(Icons.build, color: Colors.grey),
+                    title: const Text("Poner en MANTENIMIENTO"),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      provider.cambiarEstadoEspacio(espacio.id, "MANTENIMIENTO");
+                    },
+                  ),
               ],
             ),
           );
