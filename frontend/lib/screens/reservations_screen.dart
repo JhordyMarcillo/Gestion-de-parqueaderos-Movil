@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:qr_flutter/qr_flutter.dart'; // Necesario para mostrar el QR guardado
 import '../providers/parking_provider.dart';
 
 class MyReservationsScreen extends StatefulWidget {
@@ -24,107 +25,279 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
     final parkingProvider = Provider.of<ParkingProvider>(context);
     final reservas = parkingProvider.misReservas;
 
+    // Ordenar: Las más recientes primero
+    reservas.sort((a, b) => b['id'].compareTo(a['id']));
+
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC), // Fondo Slate suave
       appBar: AppBar(
-        title: const Text("Mis Reservas Activas"),
-        backgroundColor: Colors.blueAccent,
-        foregroundColor: Colors.white,
+        title: const Text("Mis Tickets", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF1E293B))),
+        backgroundColor: Colors.white,
+        elevation: 1,
+        iconTheme: const IconThemeData(color: Color(0xFF1E293B)),
       ),
       body: reservas.isEmpty
           ? Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.time_to_leave_sharp, size: 80, color: Colors.grey.shade300),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(color: Colors.blue.shade50, shape: BoxShape.circle),
+              child: Icon(Icons.confirmation_number_outlined, size: 60, color: Colors.blue.shade200),
+            ),
             const SizedBox(height: 20),
-            const Text("No tienes reservas activas.", style: TextStyle(color: Colors.grey)),
+            const Text("No tienes reservas activas.", style: TextStyle(color: Color(0xFF64748B), fontSize: 16)),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Ir a Reservar"),
+            )
           ],
         ),
       )
-          : ListView.builder(
-        padding: const EdgeInsets.all(20),
-        itemCount: reservas.length,
-        itemBuilder: (context, index) {
-          final reserva = reservas[index];
-          final espacio = reserva['espacio'];
+          : RefreshIndicator(
+        onRefresh: () async => await parkingProvider.cargarMisReservas(),
+        child: ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: reservas.length,
+          itemBuilder: (context, index) {
+            return _buildTicketCard(context, reservas[index], parkingProvider);
+          },
+        ),
+      ),
+    );
+  }
 
-          return Card(
-            elevation: 4,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text("ESPACIO", style: TextStyle(color: Colors.grey, fontSize: 12)),
-                          Text(
-                              espacio['identificador'],
-                              style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.blueAccent)
-                          ),
-                        ],
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                            color: Colors.orange.shade100,
-                            borderRadius: BorderRadius.circular(10)
-                        ),
-                        child: Text(reserva['estado'], style: TextStyle(color: Colors.orange.shade800, fontWeight: FontWeight.bold)),
-                      )
-                    ],
-                  ),
-                  const Divider(height: 30),
-                  Row(
-                    children: [
-                      const Icon(Icons.timer, color: Colors.grey),
-                      const SizedBox(width: 10),
-                      Text("Inicio: ${reserva['fechaInicio'].toString().substring(11, 16)}"), // Hora simple
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  if (reserva['estado'] != 'CANCELADA')
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red.shade50,
-                          foregroundColor: Colors.red,
-                          elevation: 0
-                      ),
-                      icon: const Icon(Icons.cancel_outlined),
-                      label: const Text("CANCELAR RESERVA"),
-                      onPressed: () async {
-                        bool confirm = await showDialog(
-                            context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: const Text("¿Cancelar reserva?"),
-                              actions: [
-                                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("NO")),
-                                TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("SÍ, CANCELAR")),
-                              ],
-                            )
-                        ) ?? false;
+  Widget _buildTicketCard(BuildContext context, dynamic reserva, ParkingProvider provider) {
+    final espacio = reserva['espacio'];
+    final String estado = reserva['estado']; // PENDIENTE, EN_CURSO, CANCELADA, FINALIZADA
+    final String? qrCode = reserva['qr'] ?? reserva['codigoQr']; // Aseguramos compatibilidad de nombres
 
-                        if (confirm) {
-                          await parkingProvider.cancelarReserva(reserva['id']);
-                          if(mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Reserva Cancelada")));
-                          }
-                        }
-                      },
+    // Configuración visual según estado
+    Color colorEstado;
+    Color colorFondo;
+    String textoEstado;
+    IconData iconEstado;
+
+    switch (estado) {
+      case 'PENDIENTE':
+        colorEstado = Colors.green;
+        colorFondo = Colors.white;
+        textoEstado = "LISTO PARA ENTRAR";
+        iconEstado = Icons.vpn_key;
+        break;
+      case 'EN_CURSO':
+        colorEstado = Colors.blue;
+        colorFondo = Colors.blue.shade50;
+        textoEstado = "AUTO DENTRO";
+        iconEstado = Icons.local_parking;
+        break;
+      case 'CANCELADA':
+        colorEstado = Colors.red;
+        colorFondo = Colors.grey.shade100;
+        textoEstado = "CANCELADA";
+        iconEstado = Icons.cancel;
+        break;
+      default:
+        colorEstado = Colors.grey;
+        colorFondo = Colors.white;
+        textoEstado = estado;
+        iconEstado = Icons.info;
+    }
+
+    // Formateo seguro de hora
+    String horaInicio = "00:00";
+    try {
+      final fecha = DateTime.parse(reserva['fechaInicio']);
+      horaInicio = "${fecha.hour.toString().padLeft(2, '0')}:${fecha.minute.toString().padLeft(2, '0')}";
+    } catch (e) {
+      horaInicio = "--:--";
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: colorFondo,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+        border: Border.all(color: estado == 'PENDIENTE' ? Colors.green.withOpacity(0.3) : Colors.transparent),
+      ),
+      child: Column(
+        children: [
+          // 1. CABECERA DEL TICKET
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color: colorEstado.withOpacity(0.1),
+              borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(iconEstado, size: 16, color: colorEstado),
+                    const SizedBox(width: 8),
+                    Text(textoEstado, style: TextStyle(fontWeight: FontWeight.bold, color: colorEstado, fontSize: 12)),
+                  ],
+                ),
+                Text("#${reserva['id']}", style: TextStyle(color: colorEstado, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+
+          // 2. CUERPO DEL TICKET
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("ESPACIO ASIGNADO", style: TextStyle(fontSize: 10, color: Colors.grey, letterSpacing: 1)),
+                    const SizedBox(height: 4),
+                    Text(
+                        espacio['identificador'],
+                        style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))
                     ),
-                  )
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const Text("HORA ENTRADA", style: TextStyle(fontSize: 10, color: Colors.grey, letterSpacing: 1)),
+                    const SizedBox(height: 4),
+                    Text(
+                        horaInicio,
+                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // 3. SEPARADOR (Línea punteada simulada)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Divider(height: 1, color: Colors.grey.shade300, thickness: 1),
+          ),
+
+          // 4. ACCIONES
+          if (estado != 'CANCELADA' && estado != 'FINALIZADA')
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  // BOTÓN QR (Solo si está pendiente o en curso)
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _mostrarQR(context, qrCode, espacio['identificador']),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black, // Estilo "Apple Wallet"
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      icon: const Icon(Icons.qr_code, size: 18),
+                      label: const Text("VER CÓDIGO QR"),
+                    ),
+                  ),
+
+                  // BOTÓN CANCELAR (Solo si es PENDIENTE)
+                  if (estado == 'PENDIENTE') ...[
+                    const SizedBox(width: 10),
+                    IconButton(
+                      onPressed: () => _confirmarCancelacion(context, provider, reserva['id']),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.red.shade50,
+                        foregroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      icon: const Icon(Icons.delete_outline),
+                      tooltip: "Cancelar Reserva",
+                    )
+                  ]
                 ],
               ),
             ),
-          );
-        },
+        ],
       ),
     );
+  }
+
+  // --- MODAL PARA VER EL QR ---
+  void _mostrarQR(BuildContext context, String? qrData, String espacioId) {
+    if (qrData == null) return;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text("Pase de Entrada", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            const SizedBox(height: 5),
+            Text("Espacio $espacioId", style: const TextStyle(color: Colors.grey)),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade200),
+                  borderRadius: BorderRadius.circular(12)
+              ),
+              child: QrImageView(
+                data: qrData,
+                version: QrVersions.auto,
+                size: 200.0,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("CERRAR"),
+          )
+        ],
+      ),
+    );
+  }
+
+  // --- LÓGICA DE CANCELACIÓN ---
+  Future<void> _confirmarCancelacion(BuildContext context, ParkingProvider provider, int idReserva) async {
+    bool confirm = await showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text("¿Cancelar reserva?"),
+          content: const Text("Perderás tu lugar asegurado."),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("VOLVER")),
+            ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text("SÍ, CANCELAR")
+            ),
+          ],
+        )
+    ) ?? false;
+
+    if (confirm) {
+      await provider.cancelarReserva(idReserva);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Reserva cancelada correctamente")));
+      }
+    }
   }
 }

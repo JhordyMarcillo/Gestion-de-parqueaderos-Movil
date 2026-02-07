@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/parking_provider.dart';
-import '../widgets/MapaNavegacion.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/services.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import '../providers/parking_provider.dart';
+import '../widgets/MapaNavegacion.dart';// Asegúrate que el nombre del archivo coincida
 
 class SectionDetailScreen extends StatelessWidget {
   final String sectionId;
@@ -14,51 +14,63 @@ class SectionDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final parkingProvider = Provider.of<ParkingProvider>(context);
 
+    // Filtrar y ordenar
     final espaciosZona = parkingProvider.espacios
         .where((e) => e.identificador.toUpperCase().startsWith(sectionId))
         .toList();
 
     espaciosZona.sort((a, b) => a.identificador.compareTo(b.identificador));
 
+    // Cálculos para el header
+    int libres = espaciosZona.where((e) => e.estado == 'LIBRE').length;
+    int total = espaciosZona.length;
+
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC), // Fondo Slate suave
       appBar: AppBar(
-        title: Text("Zona $sectionId"),
-        backgroundColor: Colors.blueAccent,
-        foregroundColor: Colors.white,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Zona $sectionId", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF1E293B))),
+            Text("$total espacios totales", style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+          ],
+        ),
+        backgroundColor: Colors.white,
+        elevation: 1,
+        iconTheme: const IconThemeData(color: Color(0xFF1E293B)),
       ),
       body: Column(
         children: [
-          // Cabecera de la zona
+          // 1. Header Informativo
           Container(
-            padding: const EdgeInsets.all(20),
-            color: Colors.blue.shade50,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            color: Colors.white,
             child: Row(
               children: [
-                const Icon(Icons.location_on, size: 40, color: Colors.blue),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    "Estás viendo el detalle de la Zona $sectionId. Selecciona un espacio.",
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
+                _buildResumenBadge(Colors.green, libres, "Disponibles"),
+                const SizedBox(width: 15),
+                _buildResumenBadge(Colors.red.shade300, total - libres, "Ocupados"),
               ],
             ),
           ),
 
+          const Divider(height: 1),
+
+          // 2. Grid de Espacios
           Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(15),
+            child: espaciosZona.isEmpty
+                ? const Center(child: Text("No hay espacios cargados"))
+                : GridView.builder(
+              padding: const EdgeInsets.all(20),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
-                childAspectRatio: 1.0,
+                childAspectRatio: 0.85, // Rectangular vertical
                 crossAxisSpacing: 15,
                 mainAxisSpacing: 15,
               ),
               itemCount: espaciosZona.length,
               itemBuilder: (context, index) {
-                final espacio = espaciosZona[index];
-                return _buildEspacioCard(context, espacio, parkingProvider);
+                return _buildClientCard(context, espaciosZona[index], parkingProvider);
               },
             ),
           ),
@@ -67,33 +79,135 @@ class SectionDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildEspacioCard(BuildContext context, dynamic espacio, ParkingProvider provider) {
-    Color color = Colors.grey;
-    if (espacio.estado == 'LIBRE') color = Colors.green.shade100;
-    if (espacio.estado == 'OCUPADO') color = Colors.red.shade100;
-    if (espacio.estado == 'RESERVADO') color = Colors.orange.shade100;
+  // Badge para el header
+  Widget _buildResumenBadge(Color color, int count, String label) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+          child: Text("$count", style: TextStyle(fontWeight: FontWeight.bold, color: color)),
+        ),
+        const SizedBox(width: 8),
+        Text(label, style: const TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w500)),
+      ],
+    );
+  }
+
+  // Tarjeta de Espacio (Estilo Cliente)
+  Widget _buildClientCard(BuildContext context, dynamic espacio, ParkingProvider provider) {
+    bool isLibre = espacio.estado == 'LIBRE';
+
+    Color colorBorde;
+    Color colorIcono;
+    Color colorFondo;
+    IconData icono;
+    String textoEstado;
+
+    // 1. CONFIGURACIÓN DE COLORES Y TEXTOS
+    switch (espacio.estado) {
+      case 'LIBRE':
+        colorBorde = Colors.green;
+        colorIcono = Colors.green;
+        colorFondo = Colors.white;
+        icono = Icons.local_parking;
+        textoEstado = "DISPONIBLE";
+        break;
+      case 'RESERVADO':
+        colorBorde = Colors.orange; // Borde Naranja
+        colorIcono = Colors.orange;
+        colorFondo = Colors.orange.shade50;
+        icono = Icons.access_time_filled;
+        textoEstado = "RESERVADO";
+        break;
+      case 'OCUPADO':
+        colorBorde = Colors.red; // Borde Rojo
+        colorIcono = Colors.red;
+        colorFondo = Colors.red.shade50;
+        icono = Icons.block;
+        textoEstado = "OCUPADO";
+        break;
+      case 'MANTENIMIENTO':
+        colorBorde = Colors.grey; // Borde Plomo
+        colorIcono = Colors.grey;
+        colorFondo = Colors.grey.shade100;
+        icono = Icons.build;
+        textoEstado = "MANTENIMIENTO";
+        break;
+      default:
+        colorBorde = Colors.grey;
+        colorIcono = Colors.grey;
+        colorFondo = Colors.white;
+        icono = Icons.help;
+        textoEstado = espacio.estado;
+    }
 
     return InkWell(
-      onTap: espacio.estado == 'LIBRE'
-          ? () => _mostrarDialogoReserva(context, espacio, provider)
-          : null,
+      // Solo permite tocar si está LIBRE
+      onTap: isLibre ? () => _mostrarDialogoReserva(context, espacio, provider) : null,
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.black12),
-            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(2,2))]
+          color: colorFondo,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+              color: colorBorde,
+              width: isLibre ? 2 : 1.5 // Borde un poco más grueso si está libre
+          ),
+          boxShadow: [
+            if (isLibre)
+              BoxShadow(color: Colors.green.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 4))
+          ],
         ),
+        // Padding interno para que nada toque los bordes
+        padding: const EdgeInsets.all(8.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(espacio.identificador, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            Text(espacio.estado, style: const TextStyle(fontSize: 10)),
+            // ID DEL ESPACIO (Ej: A1)
+            Text(
+                espacio.identificador,
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22, // Reduje un poco de 24 a 22 para prevenir overflow
+                    color: Colors.black87
+                )
+            ),
+
+            const SizedBox(height: 4), // Reduje espacio de 8 a 4
+
+            // ICONO CENTRAL
+            Icon(icono, size: 26, color: colorIcono), // Reduje icono de 28 a 26
+
+            const SizedBox(height: 4), // Reduje espacio de 8 a 4
+
+            // ETIQUETA DE ESTADO (Aquí estaba el error)
+            // FittedBox obliga al texto a encogerse si "MANTENIMIENTO" es muy largo
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                decoration: BoxDecoration(
+                    color: colorIcono.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(4)
+                ),
+                child: Text(
+                    textoEstado,
+                    style: TextStyle(
+                        fontSize: 9, // Letra pequeña
+                        fontWeight: FontWeight.bold,
+                        color: colorIcono
+                    )
+                ),
+              ),
+            )
           ],
         ),
       ),
     );
   }
+
+  // --- LÓGICA DE RESERVA (Igual funcionalidad, mejor UI) ---
 
   void _mostrarDialogoReserva(BuildContext context, dynamic espacio, ParkingProvider provider) {
     final TextEditingController horasController = TextEditingController(text: "1");
@@ -101,43 +215,70 @@ class SectionDetailScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text("Reservar ${espacio.identificador}"),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.timer, color: Colors.blueAccent),
+            const SizedBox(width: 10),
+            Text("Reservar ${espacio.identificador}", style: const TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("Ingresa duración (1 - 24h):"),
+            const Text("Duración de la reserva:", style: TextStyle(color: Colors.grey)),
             const SizedBox(height: 10),
             TextField(
               controller: horasController,
               keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               maxLength: 2,
-              decoration: const InputDecoration(
-                hintText: "Ej: 2",
-                counterText: "",
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                  counterText: "",
+                  suffixText: "horas",
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  filled: true,
+                  fillColor: Colors.grey.shade50
               ),
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly,
+                // Tu validador de rango 1-24
                 TextInputFormatter.withFunction((oldValue, newValue) {
                   if (newValue.text.isEmpty) return newValue;
                   final intValue = int.tryParse(newValue.text);
                   if (intValue != null && intValue >= 1 && intValue <= 24) {
-                    return newValue; // Valor válido
+                    return newValue;
                   }
-                  return oldValue; // Rechazar valor fuera de rango
+                  return oldValue;
                 }),
               ],
             ),
           ],
         ),
+        actionsPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("CANCELAR")),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("CANCELAR", style: TextStyle(color: Colors.grey)),
+          ),
           ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
+              ),
               onPressed: () async {
                 int horas = int.tryParse(horasController.text) ?? 1;
                 Navigator.pop(ctx);
 
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Procesando...")));
+                ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Row(children: [SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)), SizedBox(width: 15), Text("Procesando reserva...")]),
+                      duration: Duration(seconds: 1),
+                    )
+                );
 
                 Map<String, dynamic> resultado = await provider.reservarEspacio(espacio.id, horas);
 
@@ -145,11 +286,11 @@ class SectionDetailScreen extends StatelessWidget {
                   if (resultado['success'] == true) {
                     _mostrarMapaExito(context, espacio.identificador, resultado['qr']);
                   } else {
-                    _mostrarError(context, resultado['message']);
+                    _mostrarError(context, 'Ya tienes una reserva activa');
                   }
                 }
               },
-              child: const Text("CONFIRMAR")
+              child: const Text("CONFIRMAR RESERVA")
           )
         ],
       ),
@@ -163,49 +304,65 @@ class SectionDetailScreen extends StatelessWidget {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        contentPadding: const EdgeInsets.all(20),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        contentPadding: const EdgeInsets.all(24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text("¡Reserva Exitosa!", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.green)),
-            const Divider(),
-            const Text("Escanea este código en la entrada:", style: TextStyle(color: Colors.grey)),
+            // Icono de Éxito animado o estático
+            const CircleAvatar(
+              backgroundColor: Colors.green,
+              radius: 30,
+              child: Icon(Icons.check, color: Colors.white, size: 40),
+            ),
             const SizedBox(height: 15),
+            const Text("¡Reserva Exitosa!", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+            const SizedBox(height: 5),
+            Text("Espacio asignado: $identificadorEspacio", style: const TextStyle(fontSize: 18, color: Colors.blueAccent, fontWeight: FontWeight.bold)),
 
-            //QR
+            const Divider(height: 30),
+
+            // Sección QR
+            const Text("Código de Acceso", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+            const SizedBox(height: 8),
             Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black12),
-                  borderRadius: BorderRadius.circular(10)
-              ),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade200), borderRadius: BorderRadius.circular(10)),
               child: QrImageView(
                 data: qrDataString,
                 version: QrVersions.auto,
-                size: 180.0,
+                size: 160.0,
                 backgroundColor: Colors.white,
               ),
             ),
 
             const SizedBox(height: 20),
-            Text("Espacio asignado: $identificadorEspacio", style: const TextStyle(fontSize: 18)),
-            const SizedBox(height: 10),
 
-            SizedBox(
-                height: 150,
-                child: MapaNavegacion(zonaDestino: letraZona)
+            // Sección Mapa
+            const Align(alignment: Alignment.centerLeft, child: Text("Ruta de llegada:", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey))),
+            const SizedBox(height: 8),
+            Container(
+              height: 140,
+              decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade300), borderRadius: BorderRadius.circular(8)),
+              child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: MapaNavegacion(zonaDestino: letraZona)
+              ),
             ),
-
           ],
         ),
         actions: [
           SizedBox(
             width: double.infinity,
+            height: 50,
             child: ElevatedButton.icon(
               onPressed: () => Navigator.pop(ctx),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, foregroundColor: Colors.white),
-              label: const Text("Voy en camino"),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
+              ),
+              label: const Text("LISTO, VOY EN CAMINO"),
             ),
           )
         ],
@@ -217,9 +374,12 @@ class SectionDetailScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("Atención"),
-        content: Text("Ya tienes una reserva activa."),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("OK"))],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: const Row(children: [Icon(Icons.warning_amber_rounded, color: Colors.orange), SizedBox(width: 10), Text("Atención")]),
+        content: Text(mensaje),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("ENTENDIDO"))
+        ],
       ),
     );
   }

@@ -11,44 +11,63 @@ class AdminSectionDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final parkingProvider = Provider.of<ParkingProvider>(context);
 
+    // Filtramos y ordenamos los espacios
     final espaciosZona = parkingProvider.espacios
         .where((e) => e.identificador.toUpperCase().startsWith(sectionId))
         .toList();
 
     espaciosZona.sort((a, b) => a.identificador.compareTo(b.identificador));
 
+    // Cálculos rápidos para el header
+    int libres = espaciosZona.where((e) => e.estado == 'LIBRE').length;
+    int total = espaciosZona.length;
+
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC), // Fondo gris suave consistente
       appBar: AppBar(
-        title: Text("Administrar Zona $sectionId"),
-        backgroundColor: Colors.orange,
-        foregroundColor: Colors.white,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Gestión Zona $sectionId", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF1E293B))),
+            Text("$total espacios totales", style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+          ],
+        ),
+        backgroundColor: Colors.white,
+        elevation: 1,
+        iconTheme: const IconThemeData(color: Color(0xFF1E293B)),
       ),
       body: Column(
         children: [
+          // 1. Header Informativo (Resumen rápido)
           Container(
-            padding: const EdgeInsets.all(15),
-            color: Colors.orange.shade50,
-            child: const Row(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            color: Colors.white,
+            child: Row(
               children: [
-                Icon(Icons.edit_note, color: Colors.orange),
-                SizedBox(width: 10),
-                Expanded(child: Text("Toca un espacio para modificar su estado")),
+                _buildResumenBadge(Colors.green, libres, "Libres"),
+                const SizedBox(width: 15),
+                _buildResumenBadge(Colors.red, total - libres, "No Disponibles"),
               ],
             ),
           ),
+
+          const Divider(height: 1),
+
+          // 2. Grid de Espacios
           Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(15),
+            child: espaciosZona.isEmpty
+                ? const Center(child: Text("No hay espacios en esta zona"))
+                : GridView.builder(
+              padding: const EdgeInsets.all(20),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                childAspectRatio: 1.0,
+                crossAxisCount: 3, // 3 columnas
+                childAspectRatio: 0.85, // Un poco más altas para que quepa la info
                 crossAxisSpacing: 15,
                 mainAxisSpacing: 15,
               ),
               itemCount: espaciosZona.length,
               itemBuilder: (context, index) {
-                final espacio = espaciosZona[index];
-                return _buildAdminCard(context, espacio, parkingProvider);
+                return _buildAdminCard(context, espaciosZona[index], parkingProvider);
               },
             ),
           ),
@@ -57,49 +76,107 @@ class AdminSectionDetailScreen extends StatelessWidget {
     );
   }
 
+  // Badge para el header superior
+  Widget _buildResumenBadge(Color color, int count, String label) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+          child: Text("$count", style: TextStyle(fontWeight: FontWeight.bold, color: color)),
+        ),
+        const SizedBox(width: 8),
+        Text(label, style: const TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w500)),
+      ],
+    );
+  }
+
+  // Tarjeta de Espacio (Refactorizada)
   Widget _buildAdminCard(BuildContext context, dynamic espacio, ParkingProvider provider) {
-    Color color;
+    Color colorBase;
+    Color colorFondo;
     IconData icono;
+    String estadoTexto;
 
     switch (espacio.estado) {
       case 'LIBRE':
-        color = Colors.green.shade100;
+        colorBase = Colors.green;
+        colorFondo = Colors.white;
         icono = Icons.check_circle_outline;
+        estadoTexto = "Libre";
         break;
       case 'OCUPADO':
-        color = Colors.red.shade100;
+        colorBase = Colors.red;
+        colorFondo = Colors.red.shade50;
         icono = Icons.directions_car;
+        estadoTexto = "Ocupado";
         break;
       case 'RESERVADO':
-        color = Colors.orange.shade100;
+        colorBase = Colors.orange;
+        colorFondo = Colors.orange.shade50;
         icono = Icons.access_time_filled;
+        estadoTexto = "Reservado";
         break;
       case 'MANTENIMIENTO':
-        color = Colors.grey.shade300;
+        colorBase = Colors.grey;
+        colorFondo = Colors.grey.shade100;
         icono = Icons.build;
+        estadoTexto = "Mant.";
         break;
       default:
-        color = Colors.white;
+        colorBase = Colors.black;
+        colorFondo = Colors.white;
         icono = Icons.help;
+        estadoTexto = "Unknown";
     }
 
     return InkWell(
       onTap: () => _mostrarMenuCambioEstado(context, espacio, provider),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.black26),
-            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: const Offset(2,2))]
+          color: colorFondo,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+              color: espacio.estado == 'LIBRE' ? Colors.grey.shade300 : colorBase.withOpacity(0.5),
+              width: espacio.estado == 'LIBRE' ? 1 : 2
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            )
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(espacio.identificador, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-            const SizedBox(height: 5),
-            Icon(icono, size: 24, color: Colors.black54),
-            const SizedBox(height: 5),
-            Text(espacio.estado, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+            // Identificador Grande
+            Text(
+              espacio.identificador,
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                  color: espacio.estado == 'LIBRE' ? const Color(0xFF1E293B) : colorBase
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Icono de estado
+            Icon(icono, size: 28, color: colorBase),
+            const SizedBox(height: 8),
+            // Texto pequeño de estado
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: colorBase.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                estadoTexto,
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: colorBase),
+              ),
+            ),
           ],
         ),
       ),
@@ -109,49 +186,75 @@ class AdminSectionDetailScreen extends StatelessWidget {
   void _mostrarMenuCambioEstado(BuildContext context, dynamic espacio, ParkingProvider provider) {
     showModalBottomSheet(
         context: context,
+        backgroundColor: Colors.transparent, // Para que se vean las esquinas redondeadas
         builder: (ctx) {
           return Container(
-            padding: const EdgeInsets.all(20),
-            height: 300,
+            padding: const EdgeInsets.all(24),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
+            ),
             child: Column(
+              mainAxisSize: MainAxisSize.min, // Se ajusta al contenido
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Editar ${espacio.identificador}", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                const Divider(),
+                Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
+                const SizedBox(height: 20),
 
+                Row(
+                  children: [
+                    Text("Editar ${espacio.identificador}", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(8)),
+                      child: Text("Actual: ${espacio.estado}", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    )
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // Generación dinámica de opciones
                 if (espacio.estado != "LIBRE")
-                  ListTile(
-                    leading: const Icon(Icons.check_circle, color: Colors.green),
-                    title: const Text("Liberar Espacio"),
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      provider.cambiarEstadoEspacio(espacio.id, "LIBRE");
-                    },
-                  ),
+                  _buildActionTile(ctx, "Liberar Espacio", Icons.check_circle, Colors.green, () {
+                    provider.cambiarEstadoEspacio(espacio.id, "LIBRE");
+                  }),
 
                 if (espacio.estado != "OCUPADO")
-                  ListTile(
-                    leading: const Icon(Icons.car_rental, color: Colors.red),
-                    title: const Text("Marcar OCUPADO"),
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      provider.cambiarEstadoEspacio(espacio.id, "OCUPADO");
-                    },
-                  ),
+                  _buildActionTile(ctx, "Marcar OCUPADO", Icons.car_rental, Colors.red, () {
+                    provider.cambiarEstadoEspacio(espacio.id, "OCUPADO");
+                  }),
 
                 if (espacio.estado != "MANTENIMIENTO")
-                  ListTile(
-                    leading: const Icon(Icons.build, color: Colors.grey),
-                    title: const Text("Poner en MANTENIMIENTO"),
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      provider.cambiarEstadoEspacio(espacio.id, "MANTENIMIENTO");
-                    },
-                  ),
+                  _buildActionTile(ctx, "Poner en MANTENIMIENTO", Icons.build, Colors.grey, () {
+                    provider.cambiarEstadoEspacio(espacio.id, "MANTENIMIENTO");
+                  }),
+
+                const SizedBox(height: 10),
               ],
             ),
           );
         }
+    );
+  }
+
+  Widget _buildActionTile(BuildContext ctx, String title, IconData icon, Color color, VoidCallback onTap) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: ListTile(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        tileColor: color.withOpacity(0.05),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        title: Text(title, style: TextStyle(fontWeight: FontWeight.w600, color: color.withOpacity(0.8))),
+        onTap: () {
+          Navigator.pop(ctx);
+          onTap();
+        },
+      ),
     );
   }
 }
