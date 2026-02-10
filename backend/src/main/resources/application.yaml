@@ -3,9 +3,9 @@ spring:
     name: parqueadero
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    url: postgresql://postgres:vPozDBCEKskqyLqHDIkGiBXeCfWqQKhN@tramway.proxy.rlwy.net:57741/railway
+    username: postgres
+    password: vPozDBCEKskqyLqHDIkGiBXeCfWqQKhN
   jpa:
     hibernate:
       ddl-auto: update
@@ -23,4 +23,4 @@ logging:
         web: DEBUG
 
 server:
-  port: 8080
+  port: ${PORT:8080}
