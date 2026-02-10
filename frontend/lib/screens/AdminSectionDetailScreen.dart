@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/parking_provider.dart';
 
 class AdminSectionDetailScreen extends StatelessWidget {
-  final String sectionId; // "A", "B", "C"...
+  final String sectionId;
 
   const AdminSectionDetailScreen({super.key, required this.sectionId});
 
@@ -11,19 +11,17 @@ class AdminSectionDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final parkingProvider = Provider.of<ParkingProvider>(context);
 
-    // Filtramos y ordenamos los espacios
     final espaciosZona = parkingProvider.espacios
         .where((e) => e.identificador.toUpperCase().startsWith(sectionId))
         .toList();
 
     espaciosZona.sort((a, b) => a.identificador.compareTo(b.identificador));
 
-    // Cálculos rápidos para el header
     int libres = espaciosZona.where((e) => e.estado == 'LIBRE').length;
     int total = espaciosZona.length;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC), // Fondo gris suave consistente
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,7 +36,6 @@ class AdminSectionDetailScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // 1. Header Informativo (Resumen rápido)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
             color: Colors.white,
@@ -53,15 +50,15 @@ class AdminSectionDetailScreen extends StatelessWidget {
 
           const Divider(height: 1),
 
-          // 2. Grid de Espacios
+          //Grid de Espacios
           Expanded(
             child: espaciosZona.isEmpty
                 ? const Center(child: Text("No hay espacios en esta zona"))
                 : GridView.builder(
               padding: const EdgeInsets.all(20),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3, // 3 columnas
-                childAspectRatio: 0.85, // Un poco más altas para que quepa la info
+                crossAxisCount: 3,
+                childAspectRatio: 0.85,
                 crossAxisSpacing: 15,
                 mainAxisSpacing: 15,
               ),
@@ -76,7 +73,6 @@ class AdminSectionDetailScreen extends StatelessWidget {
     );
   }
 
-  // Badge para el header superior
   Widget _buildResumenBadge(Color color, int count, String label) {
     return Row(
       children: [

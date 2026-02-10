@@ -17,18 +17,14 @@ class MapaNavegacion extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          //Bloques
           CustomPaint(
             painter: _ParkingPainter(),
             size: Size.infinite,
           ),
-
-          //Trayecto del auto
           CustomPaint(
             painter: _RutaPainter(zona: zonaDestino),
             size: Size.infinite,
           ),
-
           Positioned(
             bottom: 190,
             left: -1,
@@ -45,7 +41,7 @@ class MapaNavegacion extends StatelessWidget {
   }
 }
 
-// Dibuja los bloques
+
 class _ParkingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {

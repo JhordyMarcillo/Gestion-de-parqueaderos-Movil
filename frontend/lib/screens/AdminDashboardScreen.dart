@@ -24,17 +24,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final provider = Provider.of<ParkingProvider>(context);
     final stats = provider.stats;
 
-    // Parseo seguro de datos
     final double libres = (stats['libres'] ?? 0).toDouble();
     final double ocupados = (stats['ocupados'] ?? 0).toDouble();
     final double reservados = (stats['reservados'] ?? 0).toDouble();
-    final double mant = (stats['mantenimiento'] ?? 0).toDouble();// Asegúrate que el backend envíe esto
+    final double mant = (stats['mantenimiento'] ?? 0).toDouble();
     final int totalReservas = stats['totalReservasHoy'] ?? 0;
 
     final double totalEspacios = libres + ocupados + reservados + mant;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC), // Slate 50
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,7 +71,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             const Text("Distribución de Ocupación", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
             const SizedBox(height: 15),
 
-            // --- 2. TARJETA DEL GRÁFICO ---
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
@@ -84,7 +82,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
               child: Column(
                 children: [
-                  // GRÁFICO DE DONA CON TEXTO CENTRAL
                   SizedBox(
                     height: 250,
                     child: Stack(

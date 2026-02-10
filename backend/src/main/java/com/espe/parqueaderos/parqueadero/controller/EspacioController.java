@@ -42,10 +42,10 @@ public class EspacioController {
     @PostMapping("/detectar")
     @Operation(summary = "Simulación Cámara", description = "Actualiza el estado de un espacio basado en detección visual")
     public ResponseEntity<?> recibirDeteccion(
-            @RequestParam String identificador,  // Ej: "A1"
-            @RequestParam Long parqueaderoId,    // Ej: 1
-            @RequestParam String estado,         // "OCUPADO" o "LIBRE"
-            @RequestParam(defaultValue = "0.99") BigDecimal confianza // Certeza IA
+            @RequestParam String identificador,
+            @RequestParam Long parqueaderoId,
+            @RequestParam String estado,
+            @RequestParam(defaultValue = "0.99") BigDecimal confianza
     ) {
         Espacio actualizado = espacioService.actualizarEstadoDesdeCamara(identificador, parqueaderoId, estado, confianza);
         return ResponseEntity.ok(actualizado);
@@ -55,7 +55,7 @@ public class EspacioController {
     @Operation(summary = "Cambiar estado manual", description = "Permite al Admin forzar el estado de un espacio")
     public ResponseEntity<?> actualizarEstado(
             @PathVariable Long id,
-            @RequestParam String estado) { // LIBRE, OCUPADO, MANTENIMIENTO
+            @RequestParam String estado) {
 
         Espacio espacioActualizado = espacioService.cambiarEstado(id, estado.toUpperCase());
 

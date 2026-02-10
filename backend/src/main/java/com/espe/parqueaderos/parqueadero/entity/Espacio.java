@@ -26,7 +26,3 @@ public class Espacio {
     @Column(name = "es_preferencial")
     private Boolean esPreferencial = false;
 }
-
-
-//para presentar traer una maqueta chiquita
-//parte de la aplicaicón del usuario y del administrador

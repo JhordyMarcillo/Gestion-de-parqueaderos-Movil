@@ -23,13 +23,12 @@ public class ReporteController {
     private HistorialOcupacionRepository historialRepository;
 
     @GetMapping("/ocupacion")
-    @PreAuthorize("hasRole('ADMIN')") // Solo el admin puede ver reportes completos
+    @PreAuthorize("hasRole('ADMIN')") //Admin
     @Operation(summary = "Historial de sensores", description = "Auditoría de todos los cambios detectados por las cámaras")
     public ResponseEntity<Page<HistorialOcupacion>> obtenerHistorial(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        // Devuelve paginado y ordenado por fecha descendente (lo más reciente primero)
         Page<HistorialOcupacion> historial = historialRepository.findAll(
                 PageRequest.of(page, size, Sort.by("fechaEvento").descending())
         );

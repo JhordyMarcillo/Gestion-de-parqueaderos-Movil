@@ -3,9 +3,9 @@ spring:
     name: parqueadero
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/parqueaderos
-    username: postgres
-    password: postgres
+    url: ${DATABASE_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
@@ -23,4 +23,4 @@ logging:
         web: DEBUG
 
 server:
-  port: 8080
+  port: ${PORT:8080}

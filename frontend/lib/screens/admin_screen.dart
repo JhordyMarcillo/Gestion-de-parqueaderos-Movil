@@ -82,7 +82,6 @@ class _AdminScreenState extends State<AdminScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // KPI Header
             Container(
               padding: const EdgeInsets.all(16),
               margin: const EdgeInsets.only(bottom: 16),
@@ -117,7 +116,7 @@ class _AdminScreenState extends State<AdminScreen> {
         final h = constraints.maxHeight;
         final double gap = 10.0;
 
-        final hZonaA = (h * 0.28) - gap; // Un poco más alta para que quepa la lista vertical
+        final hZonaA = (h * 0.28) - gap;
         final wZonaB = (w * 0.28) - gap;
         final wZonaCD = w - wZonaB - gap;
         final hRestante = h - hZonaA - gap;
@@ -168,9 +167,6 @@ class _AdminScreenState extends State<AdminScreen> {
 
     int total = libres + ocupados + reservados + mantenimiento;
     double porcentajeLibres = total > 0 ? (libres / total) : 0;
-
-    // Si quieres barras de progreso visuales, puedes calcular el porcentaje aquí
-    // double porcentaje = (libres + ocupados + reservados + mant) > 0 ? ocupados / (libres + ocupados + reservados + mant) : 0;
 
     return GestureDetector(
       onTap: () {

@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../providers/parking_provider.dart';
-import '../widgets/MapaNavegacion.dart';// Asegúrate que el nombre del archivo coincida
+import '../widgets/MapaNavegacion.dart';
 
 class SectionDetailScreen extends StatelessWidget {
   final String sectionId;
@@ -14,19 +14,17 @@ class SectionDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final parkingProvider = Provider.of<ParkingProvider>(context);
 
-    // Filtrar y ordenar
     final espaciosZona = parkingProvider.espacios
         .where((e) => e.identificador.toUpperCase().startsWith(sectionId))
         .toList();
 
     espaciosZona.sort((a, b) => a.identificador.compareTo(b.identificador));
 
-    // Cálculos para el header
     int libres = espaciosZona.where((e) => e.estado == 'LIBRE').length;
     int total = espaciosZona.length;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC), // Fondo Slate suave
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,7 +39,6 @@ class SectionDetailScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // 1. Header Informativo
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
             color: Colors.white,
@@ -56,7 +53,6 @@ class SectionDetailScreen extends StatelessWidget {
 
           const Divider(height: 1),
 
-          // 2. Grid de Espacios
           Expanded(
             child: espaciosZona.isEmpty
                 ? const Center(child: Text("No hay espacios cargados"))
@@ -64,7 +60,7 @@ class SectionDetailScreen extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
-                childAspectRatio: 0.85, // Rectangular vertical
+                childAspectRatio: 0.85,
                 crossAxisSpacing: 15,
                 mainAxisSpacing: 15,
               ),
@@ -79,7 +75,6 @@ class SectionDetailScreen extends StatelessWidget {
     );
   }
 
-  // Badge para el header
   Widget _buildResumenBadge(Color color, int count, String label) {
     return Row(
       children: [
@@ -94,7 +89,7 @@ class SectionDetailScreen extends StatelessWidget {
     );
   }
 
-  // Tarjeta de Espacio (Estilo Cliente)
+  //tarjeta del cliente
   Widget _buildClientCard(BuildContext context, dynamic espacio, ParkingProvider provider) {
     bool isLibre = espacio.estado == 'LIBRE';
 
@@ -104,7 +99,6 @@ class SectionDetailScreen extends StatelessWidget {
     IconData icono;
     String textoEstado;
 
-    // 1. CONFIGURACIÓN DE COLORES Y TEXTOS
     switch (espacio.estado) {
       case 'LIBRE':
         colorBorde = Colors.green;
@@ -114,21 +108,21 @@ class SectionDetailScreen extends StatelessWidget {
         textoEstado = "DISPONIBLE";
         break;
       case 'RESERVADO':
-        colorBorde = Colors.orange; // Borde Naranja
+        colorBorde = Colors.orange;
         colorIcono = Colors.orange;
         colorFondo = Colors.orange.shade50;
         icono = Icons.access_time_filled;
         textoEstado = "RESERVADO";
         break;
       case 'OCUPADO':
-        colorBorde = Colors.red; // Borde Rojo
+        colorBorde = Colors.red;
         colorIcono = Colors.red;
         colorFondo = Colors.red.shade50;
         icono = Icons.block;
         textoEstado = "OCUPADO";
         break;
       case 'MANTENIMIENTO':
-        colorBorde = Colors.grey; // Borde Plomo
+        colorBorde = Colors.grey;
         colorIcono = Colors.grey;
         colorFondo = Colors.grey.shade100;
         icono = Icons.build;
@@ -143,7 +137,6 @@ class SectionDetailScreen extends StatelessWidget {
     }
 
     return InkWell(
-      // Solo permite tocar si está LIBRE
       onTap: isLibre ? () => _mostrarDialogoReserva(context, espacio, provider) : null,
       borderRadius: BorderRadius.circular(16),
       child: Container(
@@ -152,37 +145,32 @@ class SectionDetailScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
               color: colorBorde,
-              width: isLibre ? 2 : 1.5 // Borde un poco más grueso si está libre
+              width: isLibre ? 2 : 1.5
           ),
           boxShadow: [
             if (isLibre)
               BoxShadow(color: Colors.green.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 4))
           ],
         ),
-        // Padding interno para que nada toque los bordes
         padding: const EdgeInsets.all(8.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // ID DEL ESPACIO (Ej: A1)
             Text(
                 espacio.identificador,
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 22, // Reduje un poco de 24 a 22 para prevenir overflow
+                    fontSize: 22,
                     color: Colors.black87
                 )
             ),
 
-            const SizedBox(height: 4), // Reduje espacio de 8 a 4
+            const SizedBox(height: 4),
 
-            // ICONO CENTRAL
-            Icon(icono, size: 26, color: colorIcono), // Reduje icono de 28 a 26
+            Icon(icono, size: 26, color: colorIcono),
 
-            const SizedBox(height: 4), // Reduje espacio de 8 a 4
+            const SizedBox(height: 4),
 
-            // ETIQUETA DE ESTADO (Aquí estaba el error)
-            // FittedBox obliga al texto a encogerse si "MANTENIMIENTO" es muy largo
             FittedBox(
               fit: BoxFit.scaleDown,
               child: Container(
@@ -194,7 +182,7 @@ class SectionDetailScreen extends StatelessWidget {
                 child: Text(
                     textoEstado,
                     style: TextStyle(
-                        fontSize: 9, // Letra pequeña
+                        fontSize: 9,
                         fontWeight: FontWeight.bold,
                         color: colorIcono
                     )
@@ -207,8 +195,7 @@ class SectionDetailScreen extends StatelessWidget {
     );
   }
 
-  // --- LÓGICA DE RESERVA (Igual funcionalidad, mejor UI) ---
-
+  //reservas
   void _mostrarDialogoReserva(BuildContext context, dynamic espacio, ParkingProvider provider) {
     final TextEditingController horasController = TextEditingController(text: "1");
 
@@ -244,7 +231,6 @@ class SectionDetailScreen extends StatelessWidget {
               ),
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly,
-                // Tu validador de rango 1-24
                 TextInputFormatter.withFunction((oldValue, newValue) {
                   if (newValue.text.isEmpty) return newValue;
                   final intValue = int.tryParse(newValue.text);
@@ -309,7 +295,6 @@ class SectionDetailScreen extends StatelessWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Icono de Éxito animado o estático
             const CircleAvatar(
               backgroundColor: Colors.green,
               radius: 30,
@@ -322,7 +307,7 @@ class SectionDetailScreen extends StatelessWidget {
 
             const Divider(height: 30),
 
-            // Sección QR
+            // qr
             const Text("Código de Acceso", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
             const SizedBox(height: 8),
             Container(
@@ -338,7 +323,7 @@ class SectionDetailScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // Sección Mapa
+            //mapa
             const Align(alignment: Alignment.centerLeft, child: Text("Ruta de llegada:", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey))),
             const SizedBox(height: 8),
             Container(

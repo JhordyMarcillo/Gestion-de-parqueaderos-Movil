@@ -25,11 +25,11 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
     final parkingProvider = Provider.of<ParkingProvider>(context);
     final reservas = parkingProvider.misReservas;
 
-    // Ordenar: Las más recientes primero
+    // ordenar las reservas
     reservas.sort((a, b) => b['id'].compareTo(a['id']));
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC), // Fondo Slate suave
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text("Mis Tickets", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF1E293B))),
         backgroundColor: Colors.white,
@@ -71,10 +71,10 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
 
   Widget _buildTicketCard(BuildContext context, dynamic reserva, ParkingProvider provider) {
     final espacio = reserva['espacio'];
-    final String estado = reserva['estado']; // PENDIENTE, EN_CURSO, CANCELADA, FINALIZADA
-    final String? qrCode = reserva['qr'] ?? reserva['codigoQr']; // Aseguramos compatibilidad de nombres
+    final String estado = reserva['estado'];
+    final String? qrCode = reserva['qr'] ?? reserva['codigoQr'];
 
-    // Configuración visual según estado
+    //el estado segun el tikcet
     Color colorEstado;
     Color colorFondo;
     String textoEstado;
@@ -106,7 +106,6 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
         iconEstado = Icons.info;
     }
 
-    // Formateo seguro de hora
     String horaInicio = "00:00";
     try {
       final fecha = DateTime.parse(reserva['fechaInicio']);
@@ -131,7 +130,7 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
       ),
       child: Column(
         children: [
-          // 1. CABECERA DEL TICKET
+          // header ticker
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: BoxDecoration(
@@ -153,7 +152,7 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
             ),
           ),
 
-          // 2. CUERPO DEL TICKET
+          // ticket
           Padding(
             padding: const EdgeInsets.all(20),
             child: Row(
@@ -185,24 +184,22 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
             ),
           ),
 
-          // 3. SEPARADOR (Línea punteada simulada)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Divider(height: 1, color: Colors.grey.shade300, thickness: 1),
           ),
 
-          // 4. ACCIONES
+          //acciones de la reserva
           if (estado != 'CANCELADA' && estado != 'FINALIZADA')
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: [
-                  // BOTÓN QR (Solo si está pendiente o en curso)
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () => _mostrarQR(context, qrCode, espacio['identificador']),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black, // Estilo "Apple Wallet"
+                        backgroundColor: Colors.black,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -212,7 +209,6 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
                     ),
                   ),
 
-                  // BOTÓN CANCELAR (Solo si es PENDIENTE)
                   if (estado == 'PENDIENTE') ...[
                     const SizedBox(width: 10),
                     IconButton(
@@ -234,7 +230,7 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
     );
   }
 
-  // --- MODAL PARA VER EL QR ---
+  //qr
   void _mostrarQR(BuildContext context, String? qrData, String espacioId) {
     if (qrData == null) return;
 
@@ -275,7 +271,7 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
     );
   }
 
-  // --- LÓGICA DE CANCELACIÓN ---
+  //cancelar reserva
   Future<void> _confirmarCancelacion(BuildContext context, ParkingProvider provider, int idReserva) async {
     bool confirm = await showDialog(
         context: context,

@@ -16,7 +16,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  bool _isObscure = true; // Para mostrar/ocultar contraseña
+  bool _isObscure = true;
 
   @override
   void dispose() {
@@ -29,7 +29,6 @@ class _LoginScreenState extends State<LoginScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     if (_formKey.currentState!.validate()) {
-      // Ocultar teclado
       FocusScope.of(context).unfocus();
 
       final success = await authProvider.login(
@@ -42,8 +41,6 @@ class _LoginScreenState extends State<LoginScreen> {
       if (success) {
         final prefs = await SharedPreferences.getInstance();
         final role = prefs.getString('user_role')?.trim().toUpperCase() ?? "USER";
-
-        // Navegación basada en Rol
         if (role == 'ADMIN' || role == 'ROLE_ADMIN') {
           Navigator.pushAndRemoveUntil(
             context,
@@ -82,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9), // Slate 100
+      backgroundColor: const Color(0xFFF1F5F9),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -90,7 +87,6 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // 1. BRANDING / LOGO
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -110,7 +106,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 40),
 
-                // 2. TARJETA DE LOGIN
                 Container(
                   padding: const EdgeInsets.all(30),
                   decoration: BoxDecoration(
