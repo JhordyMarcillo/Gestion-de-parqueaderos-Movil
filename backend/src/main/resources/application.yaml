@@ -3,9 +3,9 @@ spring:
     name: parqueadero
 
   datasource:
-    url: ${DATABASE_URL}
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
@@ -23,4 +23,4 @@ logging:
         web: DEBUG
 
 server:
-  port: ${PORT:8080}
+  port: 8080
